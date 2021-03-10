@@ -19,6 +19,10 @@ import os
 WIDTH = 1200
 HEIGHT = 900
 
+class Checkpoint(pg.sprite.Sprite):
+    def __init__(self, init_xy1, init_xy2, goal=False):
+        pg.sprite.Sprite.__init__(self)
+        
 
 class Track(pg.sprite.Sprite):
     def __init__(self):
