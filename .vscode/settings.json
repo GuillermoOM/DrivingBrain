@@ -2,5 +2,6 @@
     "python.linting.enabled": true,
     "python.linting.pylintArgs": [
         "--extension-pkg-whitelist=pygame"
-    ]
+    ],
+    "python.pythonPath": "C:\\Users\\guill\\AppData\\Local\\Programs\\Python\\Python38-32\\python.exe"
 }
