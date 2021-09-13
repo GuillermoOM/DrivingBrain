@@ -7,11 +7,19 @@ from numpy.lib.ufunclike import _deprecate_out_named_y
 
 nnfs.init()
 
-
 class Layer_Dense:
     def __init__(self, n_inputs, n_neurons, i_weight=0.01, i_bias=0.0):
         self.weights = i_weight * np.random.randn(n_inputs, n_neurons)
         self.biases = i_bias * np.random.randn(1, n_neurons)
+    
+    def inherit_and_evolve_WB(self, old_w, old_b, wmf=0.01, bmf=0.01):
+        # old_w inherited weight, old_b inherited bias, wmf weight mutation factor, bmf bias mutation factor
+        self.weights = old_w + np.random.randn(self.weights.shape[0], self.weights.shape[1])*wmf
+        self.biases = old_b + np.random.randn(1, self.biases.shape[0])*bmf
+    
+    def inherit_WB(self, old_w, old_b):
+        self.weights = old_w
+        self.biases = old_b
 
     def forward(self, inputs):
         self.inputs = inputs
@@ -22,7 +30,6 @@ class Layer_Dense:
         self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
         self.dinputs = np.dot(dvalues, self.weights.T)
 
-
 class Activation_ReLU:
     def forward(self, inputs):
         self.inputs = inputs
@@ -31,7 +38,6 @@ class Activation_ReLU:
     def backward(self, dvalues):
         self.dinputs = dvalues.copy()
         self.dinputs[self.inputs <= 0] = 0
-
 
 class Activation_Softmax:
     def forward(self, inputs):
@@ -49,7 +55,6 @@ class Activation_Softmax:
                 single_output) - np.dot(single_output, single_output.T)
             self.dinputs[index] = np.dot(jacobian_matrix, single_dvalues)
 
-
 class Activation_Sigmoid:
     # Forward pass
     def forward(self, inputs):
@@ -58,18 +63,15 @@ class Activation_Sigmoid:
         self.inputs = inputs
         self.output = 1 / (1 + np.exp(-inputs))
     # Backward pass
-
     def backward(self, dvalues):
         # Derivative - calculates from output of the sigmoid function
         self.dinputs = dvalues * (1 - self.output) * self.output
-
 
 class Loss:
     def calculate(self, output, y):
         sample_losses = self.forward(output, y)
         data_loss = np.mean(sample_losses)
         return data_loss
-
 
 class Loss_CatergoricalCrossentropy(Loss):
     def forward(self, y_pred, y_true):
@@ -99,7 +101,6 @@ class Loss_CatergoricalCrossentropy(Loss):
         self.dinputs = -y_true / dvalues
         self.dinputs = self.dinputs / samples
 
-
 class Activation_Softmax_Loss_CategoricalCrossentropy():
     def __init__(self):
         self.activation = Activation_Softmax()
@@ -119,7 +120,6 @@ class Activation_Softmax_Loss_CategoricalCrossentropy():
         self.dinputs = dvalues.copy()
         self.dinputs[range(samples), y_true] -= 1
         self.dinputs = self.dinputs / samples
-
 
 class Optimizer_SGD:
     def __init__(self, Learning_rate=1., decay=0., momentum=0.):
@@ -160,11 +160,10 @@ class Optimizer_SGD:
     def post_update_params(self):
         self.iterations += 1
 
-
 if __name__ == "__main__":
     X, y = spiral_data(samples=100, classes=3)
 
-    print(X)
+    # print(X)
 
     dense1 = Layer_Dense(2, 64)
 
@@ -176,34 +175,34 @@ if __name__ == "__main__":
 
     optimizer = Optimizer_SGD(Learning_rate=1, decay=1e-3, momentum=0.9)
 
-    for epoch in range(10001):
-        dense1.forward(X)
-        activation1.forward(dense1.output)
-        dense2.forward(activation1.output)
+    # for epoch in range(10001):
+    #     dense1.forward(X)
+    #     activation1.forward(dense1.output)
+    #     dense2.forward(activation1.output)
 
-        loss = loss_activation.forward(dense2.output, y)
+    #     loss = loss_activation.forward(dense2.output, y)
 
-        # print('loss:', loss)
+    #     # print('loss:', loss)
 
-        predictions = np.argmax(loss_activation.output, axis=1)
-        if len(y.shape) == 2:
-            y = np.argmax(y, axis=1)
-        accuracy = np.mean(predictions == y)
+    #     predictions = np.argmax(loss_activation.output, axis=1)
+    #     if len(y.shape) == 2:
+    #         y = np.argmax(y, axis=1)
+    #     accuracy = np.mean(predictions == y)
 
-        # print('acc:', accuracy)
+    #     # print('acc:', accuracy)
 
-        if not epoch % 100:
-            print(f'epoch: {epoch}, ' +
-                  f'acc: {accuracy:.3f}, ' +
-                  f'loss: {loss:.3f}, ' +
-                  f'lr : {optimizer.current_learning_rate}')
+    #     if not epoch % 100:
+    #         print(f'epoch: {epoch}, ' +
+    #               f'acc: {accuracy:.3f}, ' +
+    #               f'loss: {loss:.3f}, ' +
+    #               f'lr : {optimizer.current_learning_rate}')
 
-        loss_activation.backward(loss_activation.output, y)
-        dense2.backward(loss_activation.dinputs)
-        activation1.backward(dense2.dinputs)
-        dense1.backward(activation1.dinputs)
+    #     loss_activation.backward(loss_activation.output, y)
+    #     dense2.backward(loss_activation.dinputs)
+    #     activation1.backward(dense2.dinputs)
+    #     dense1.backward(activation1.dinputs)
 
-        optimizer.pre_update_params()
-        optimizer.update_params(dense1)
-        optimizer.update_params(dense2)
-        optimizer.post_update_params()
+    #     optimizer.pre_update_params()
+    #     optimizer.update_params(dense1)
+    #     optimizer.update_params(dense2)
+    #     optimizer.post_update_params()
